@@ -1,0 +1,6 @@
+.vs/
+.vscode/
+out/
+build/
+plugin_output/
+CMakeSettings.json
