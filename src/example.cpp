@@ -8,7 +8,6 @@ public:
 	// 你应该在此做的：对插件的成员变量进行初始化
 	// 你不该在此做的：对插件配置进行初始化，因为此时程序主体还不知道插件的信息，
 	MyPlugin(const string& app_path) : BasicPlugin(app_path){
-		
 		this->m_author = "xxx";
 		this->m_name = "MyPlugin";
 		this->m_version = "0.1.1.alpha";
@@ -22,12 +21,9 @@ public:
 		loger.pluginInfo(this) << "联系方式：" << this->m_other_info;
 	}
 	// 插件主体，每个Tick执行一次
-	void pluginMain() {
-		// 无参版：每个Tick都会调用一次
-	}
 	void pluginMain(const string& msg) {
 		// 有参版：只有消息队列有消息时，才会调用
-		// 下面的逻辑是：当有人给Bot发送"呀咩咯"时，Bot进行回复
+		// 下面的逻辑是：当有人给Bot发送"呀咩咯"时，Bot进行回复，并在5秒后撤回
 		json QQevent = json::parse(msg, NULL, false);
 		if (QQevent["post_type"] == "message") {
 			if (QQevent["message_type"] == "private" && QQevent["message"] == "呀咩咯") {
@@ -36,6 +32,10 @@ public:
 				msg << "呀咩咯!";
 				msg.addImageURLForPrivate(QQBot.getQQHeaderImageURL(sender));
 				QQBot.applySendPrivateMsg(sender, msg);
+				TimeVal time;
+				time.second = 5;
+				std::function<void()> f = std::bind(&ThisBot::applyWithdrawMsg, QQBotPtr, msg.getMsgID());
+				Process.addTimerTask(time, f);
 			}
 			else if (QQevent["message_type"] == "group" && QQevent["message"] == "呀咩咯") {
 				unsigned int sender_group = QQevent["group_id"];
@@ -46,6 +46,10 @@ public:
 				msg << "呀咩咯!";
 				msg.addImageURLForGroup(QQBot.getQQHeaderImageURL(sender_member));
 				QQBot.applySendGroupMsg(sender_group, msg);
+				TimeVal time;
+				time.second = 5;
+				std::function<void()> f = std::bind(&ThisBot::applyWithdrawMsg, QQBotPtr, msg.getMsgID());
+				Process.addTimerTask(time, f);
 			}
 		}
 	}
